@@ -42,21 +42,30 @@
         ]"
       />
       <div style="margin: 16px;">
-        <van-button round block type="info" native-type="submit">提交</van-button>
+        <van-button
+          :loading="isLoading"
+          round
+          block
+          type="info"
+          native-type="submit"
+        >提交</van-button>
       </div>
     </van-form>
   </div>
 </template>
 
 <script>
+import { login } from '@/services/user'
 export default {
   name: 'Login',
   data () {
     return {
       form: {
-        phone: '',
-        password: ''
-      }
+        phone: '18201288771',
+        password: '111111'
+      },
+      // 登陆按钮加载中的状态
+      isLoading: false
     }
   },
   methods: {
@@ -64,8 +73,19 @@ export default {
       return /^1\d{10}$/.test(value)
     },
     // 提交
-    onSubmit () {
-
+    async onSubmit () {
+      this.isLoading = true
+      const { data } = await login(this.form)
+      if (data.state === 1) {
+        this.$toast.success('登录成功')
+        // 将用户信息存储到 state 中
+        this.$store.commit('setUser', data.content)
+        // 跳转
+        this.$route.push(this.$route.query.redirect || '/')
+      } else {
+        this.$toast.fail('登录失败')
+      }
+      this.isLoading = false
     },
     // 返回按钮
     onClickLeft () {

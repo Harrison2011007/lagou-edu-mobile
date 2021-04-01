@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
+import store from '@/store'
 
 // course组件常用，不采用懒加载的方式
 import Course from '@/views/course'
@@ -20,12 +21,14 @@ const routes = [
   {
     path: '/learn',
     name: 'learn',
-    component: () => import(/* webpackChunkName: 'login' */'@/views/learn')
+    component: () => import(/* webpackChunkName: 'login' */'@/views/learn'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/user',
     name: 'user',
-    component: () => import(/* webpackChunkName: 'login' */'@/views/user')
+    component: () => import(/* webpackChunkName: 'login' */'@/views/user'),
+    meta: { requiresAuth: true }
   },
   // 错误页面
   {
@@ -38,6 +41,26 @@ const routes = [
 
 const router = new VueRouter({
   routes
+})
+
+// 设置到行首尾进行登陆检测和跳转
+router.beforeEach((to, from, next) => {
+  // 验证to 路由是否需要进行身份验证
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!store.state.user) {
+      // 未登录，跳转到登陆页面
+      return next({
+        name: 'login',
+        query: {
+          redirect: to.fullPath
+        }
+      })
+    }
+    // 已经登录，允许通过
+    next()
+  } else {
+    next()
+  }
 })
 
 export default router
