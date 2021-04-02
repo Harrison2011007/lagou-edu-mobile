@@ -30,6 +30,12 @@ const routes = [
     component: () => import(/* webpackChunkName: 'login' */'@/views/user'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/course-info/:courseId',
+    name: 'course-info',
+    component: () => import(/* webpackChunkName: 'course-info' */'@/views/course-info'),
+    props: true
+  },
   // 错误页面
   {
     path: '*',

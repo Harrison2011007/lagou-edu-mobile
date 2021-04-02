@@ -7,13 +7,15 @@
       </van-swipe-item>
     </van-swipe>
     <!-- 底部课程列表 -->
-    <course-content-list></course-content-list>
+    <course-content-list
+      :fetch-data="fetchData"
+    ></course-content-list>
   </div>
 </template>
 
 <script>
-import CourseContentList from './CourseContentList'
-import { getAllAds } from '@/services/course'
+import CourseContentList from '@/components/CourseContentList'
+import { getAllAds, getQueryCourses } from '@/services/course'
 export default {
   name: 'CourseContent',
   components: {
@@ -28,8 +30,13 @@ export default {
   created () {
     // 轮播图图片信息
     this.loadAds()
+    // 或者再created中直接将值传给fetchdata
+    // this.fetchData = getQueryCourses
   },
   methods: {
+    fetchData (option) {
+      return getQueryCourses(option)
+    },
     async loadAds () {
       // 此处的'999'是后端返回的数据，代表首页顶部轮播图的广告位
       const { data } = await getAllAds({

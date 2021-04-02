@@ -1,5 +1,5 @@
 <template>
-  <div class="coursecontentlist">
+  <div class="course-content-list">
     <!-- 下拉刷新组件 -->
     <van-pull-refresh
       v-model="refreshing"
@@ -11,16 +11,28 @@
       finished-text="没有更多了"
       @load="onLoad"
     >
-      <van-cell v-for="item in list" :key="item.id">
+      <van-cell
+        v-for="item in list"
+        :key="item.id"
+        @click="$router.push({
+          name: 'course-info',
+          params: {
+            courseId: item.id
+          }
+        })"
+        >
         <!-- 课程左侧图片 -->
         <div>
-          <img :src="item.courseImgUrl" alt="" >
+          <img :src="item.courseImgUrl || item.image" alt="" >
         </div>
         <!-- 右侧课程信息 -->
         <div class="course-info">
-          <h3 v-text="item.courseName"></h3>
+          <h3 v-text="item.courseName || item.name"></h3>
           <p class="course-preview" v-html="item.previewFirstField"></p>
-          <p class="price-container">
+          <!-- 如果已经购买课程，无需显示价格区域 -->
+          <p
+            v-if="item.price"
+            class="price-container">
             <span class="course-discounts">￥{{ item.discounts }}</span>
             <s class="course-price">￥{{ item.price }}</s>
           </p>
@@ -32,9 +44,16 @@
 </template>
 
 <script>
-import { getQueryCourses } from '@/services/course'
+// import { getQueryCourses } from '@/services/course'
 export default {
   name: 'CourseContentList',
+  props: {
+    // 用于请求数据的函数
+    fetchData: {
+      type: Function,
+      required: true
+    }
+  },
   data () {
     return {
       // 用于存储数据
@@ -55,20 +74,22 @@ export default {
       // 还原数据页数为1
       this.currentPage = 1
       // 重新发送请求
-      const { data } = await getQueryCourses({
+      const { data } = await this.fetchData({
         currentPage: this.currentPage,
         pageSize: 10,
         status: 1
       })
       if (data.data && data.data.records && data.data.records.length !== 0) {
         this.list = data.data.records
+      } else if (data.content && data.content.length !== 0) {
+        this.list = data.content
       }
       this.$toast('刷新成功')
       // 关闭下拉提示框
       this.refreshing = false
     },
     async onLoad () {
-      const { data } = await getQueryCourses({
+      const { data } = await this.fetchData({
         currentPage: this.currentPage,
         pageSize: 10,
         // 代表上架的课程
@@ -78,13 +99,18 @@ export default {
       // 每次不能重新赋值，只能追加到list中
       if (data.data && data.data.records && data.data.records.length !== 0) {
         this.list.push(...data.data.records)
+      } else if (data.content && data.content.length !== 0) {
+        this.list.push(...data.content)
       }
       // 下次请求下一页
       this.currentPage++
       // 加载装填结束
       this.loading = false
+
       // 加载全部加载完成
-      if (data.data.records.length < 10) {
+      if (data.data && data.data.records && data.data.records.length < 10) {
+        this.finished = true
+      } else if (data.content && data.content.length < 10) {
         this.finished = true
       }
     }

@@ -61,8 +61,8 @@ export default {
   data () {
     return {
       form: {
-        phone: '18201288771',
-        password: '111111'
+        phone: '',
+        password: ''
       },
       // 登陆按钮加载中的状态
       isLoading: false
@@ -81,7 +81,7 @@ export default {
         // 将用户信息存储到 state 中
         this.$store.commit('setUser', data.content)
         // 跳转
-        this.$route.push(this.$route.query.redirect || '/')
+        this.$router.push(this.$route.query.redirect || '/')
       } else {
         this.$toast.fail('登录失败')
       }
