@@ -26,16 +26,14 @@
       <van-cell class="course-detail">
         <van-tabs sticky scrollspy>
           <van-tab title="详情">
-            <!-- 详情是在后台通过富文本编辑器设置的，内容是html文本 -->
+            <!-- 详情在后台是通过富文本编辑器设置的，内容为 HTML 文本 -->
             <div v-html="course.courseDescription"></div>
           </van-tab>
           <van-tab title="内容">
             <course-section
               v-for="item in sections"
               :key="item.id"
-              :section-data="item"
-            >
-
+              :section-data="item">
             </course-section>
           </van-tab>
         </van-tabs>
@@ -48,7 +46,10 @@
         <span class="discounts">￥{{ course.discounts}}</span>
         <span>￥{{ course.price }}</span>
       </div>
-      <van-button type="primary">立即购买</van-button>
+      <van-button
+        type="primary"
+        @click="handlePay"
+      >立即购买</van-button>
     </van-tabbar>
   </div>
 </template>
@@ -74,7 +75,7 @@ export default {
       // 课程章节信息
       sections: {},
       // 样式信息
-      styleOption: {}
+      styleOptions: {}
     }
   },
   created () {
@@ -83,6 +84,26 @@ export default {
     this.loadSection()
   },
   methods: {
+    // 支付操作
+    handlePay () {
+      // 检测是否登录
+      if (this.$store.state.user) {
+        // 如果已经登陆
+        this.$router.push({
+          name: 'pay',
+          params: {
+            courseId: this.courseId
+          }
+        })
+      } else {
+        this.$router.push({
+          name: 'login',
+          query: {
+            redirect: this.$route.fullpath
+          }
+        })
+      }
+    },
     // 获取章节信息
     async loadSection () {
       const { data } = await getSectionAndLesson({
@@ -98,7 +119,7 @@ export default {
       })
       this.course = data.content
       if (data.content.isBuy) {
-        this.styleOption.bottom = 0
+        this.styleOptions.bottom = 0
       }
     }
   }
@@ -129,7 +150,7 @@ export default {
   flex: 1;
   margin: 0;
 }
-
+// 修改 discounts 作用范围，让顶部与底部均可使用
 .discounts {
   color: #ff7452;
   font-size: 24px !important;

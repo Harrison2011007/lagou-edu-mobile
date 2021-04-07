@@ -6,6 +6,7 @@
       class="lesson"
       v-for="item in sectionData.courseLessons"
       :key="item.id"
+      @click="handleClick(item)"
     >
       <span v-text="item.theme"></span>
       <van-icon v-if="item.canPlay" name="play-circle" size="20"></van-icon>
@@ -21,6 +22,19 @@ export default {
     sectionData: {
       type: Object,
       required: true
+    }
+  },
+  methods: {
+    handleClick (lessonInfo) {
+      // 如果canplay为true，则进行跳转，false说明视频锁住，不能跳转
+      if (lessonInfo.canPlay) {
+        this.$router.push({
+          name: 'lesson-video',
+          params: {
+            lessonId: lessonInfo.id
+          }
+        })
+      }
     }
   }
 
