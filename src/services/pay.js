@@ -27,8 +27,10 @@ export const initPayment = data => {
   })
 }
 
-// 柴勋订单（支付结果）
-export const getPyaResult = params => {
+// 查询订单（查询支付结果）
+//  - orderNo 订单号必传
+//  - 由于接口要求传递 JSON，所以进行 headers 设置
+export const getPayResult = params => {
   return request({
     method: 'GET',
     url: '/front/pay/getPayResult',

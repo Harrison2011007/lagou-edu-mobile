@@ -19,16 +19,16 @@
           <p>支付方式</p>
           <van-radio-group v-model="radio">
             <van-cell-group>
-              <van-cell  @click="radio = '1'">
+              <van-cell @click="radio = payInfo[1].channelCode">
                 <template #title>
                   <img src="http://www.lgstatic.com/lg-app-fed/pay/images/wechat_b787e2f4.png" alt="">
                   <span>微信支付</span>
                 </template>
                 <template #right-icon>
-                  <van-radio name="1" />
+                  <van-radio :name="1" />
                 </template>
               </van-cell>
-              <van-cell clickable @click="radio = '2'">
+              <van-cell clickable @click="radio = payInfo[0].channelCode">
                 <template #title>
                   <img src="http://www.lgstatic.com/lg-app-fed/pay/images/ali_ed78fdae.png" alt="">
                   <span>支付宝支付</span>
@@ -40,7 +40,7 @@
             </van-cell-group>
           </van-radio-group>
         </div>
-        <van-button>
+        <van-button @click="handlePay">
           ￥{{ course.discounts }} 立即支付
         </van-button>
       </van-cell>
@@ -50,7 +50,7 @@
 
 <script>
 import { getCourseById } from '@/services/course'
-import { createOrder } from '@/services/pay'
+import { createOrder, initPayment, getPayInfo, getPayResult } from '@/services/pay'
 export default {
   name: 'Pay',
   props: {
@@ -66,7 +66,9 @@ export default {
       // raidio单选框选中数据
       radio: '1',
       // 订单号
-      orderNo: null
+      orderNo: null,
+      // 支付信息
+      payInfo: {}
     }
   },
   created () {
@@ -75,18 +77,43 @@ export default {
     this.loadOrder()
   },
   methods: {
-    // 获取订单
+    // 创建订单
+    async handlePay () {
+      const { data } = await initPayment({
+        goodsOrderNo: this.orderNo,
+        channel: this.radio === '1' ? 'weChat' : 'aliPay',
+        returnUrl: 'http://edufront.lagou.com'
+      })
+      console.log(data)
+      // 接收响应地址并跳转
+      window.loaction.href = data.content.payUrl
+
+      const timer = setInterval(async () => {
+        // 发起查询支付结果的请求
+        const { data: payResult } = await getPayResult({
+          orderNo: data.content.orderNo
+        })
+        if (payResult.content && payResult.content.status === 2) {
+          clearInterval(timer)
+          this.$toast.success('购买成功')
+          this.$router.push({
+            name: 'learn'
+          })
+        }
+      }, 1000)
+    },
+    // 创建订单，获取订单号
     async loadOrder () {
       // 创建订单，获取订单号
       const { data } = await createOrder({
         goodsId: this.courseId
       })
-      console.log(data)
       this.orderNo = data.content.orderNo
-      // 获取支付方式,data重名，用结构的方式用payinfo代替
-      // const { data: payInfo } = await getPayInfo({
-      //   shopOrderNo: this.orderNo
-      // })
+      // 获取支付方式
+      const { data: payInfo } = await getPayInfo({
+        shopOrderNo: this.orderNo
+      })
+      this.payInfo = payInfo.content.supportChannels
     },
     async loadCourse () {
       const { data } = await getCourseById({
@@ -100,7 +127,6 @@ export default {
       return this.$store.state.user.organization.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
     }
   }
-
 }
 </script>
 
